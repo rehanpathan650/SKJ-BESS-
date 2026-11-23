@@ -22,7 +22,7 @@ log = logging.getLogger("skj.health")
 
 def create_app() -> FastAPI:
     s = get_settings()
-    docs = not s.is_production  # no public API docs in production
+    docs = not s.is_production and s.api_docs  # no public API docs in production or behind a public link
     app = FastAPI(
         title=s.app_name,
         version="1.0.0",

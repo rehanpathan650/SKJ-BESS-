@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     # Single-login mode: one account generates quotations end to end. Public sign-up is off, and saved
     # configurations and proposals skip the engineer-validation / approval chain (that needs several people).
     single_user_mode: bool = False
+    # Interactive API docs (/api/v1/docs) in development. Set API_DOCS=false when exposing a dev machine publicly.
+    api_docs: bool = True
 
     # Sign-up rules
     allowed_email_domains: str = "skjenergy.com"  # comma separated

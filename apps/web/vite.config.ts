@@ -10,6 +10,14 @@ export default defineConfig(({ mode }) => ({
     strictPort: mode === "e2e",
     proxy: { "/api": { target: mode === "e2e" ? "http://127.0.0.1:8020" : "http://127.0.0.1:8000", changeOrigin: false } },
   },
+  // `vite preview` serves the built site for the public link (Cloudflare Tunnel); /api goes to the local API.
+  preview: {
+    port: 4173,
+    strictPort: true,
+    host: "127.0.0.1",
+    allowedHosts: [".trycloudflare.com"],
+    proxy: { "/api": { target: "http://127.0.0.1:8000", changeOrigin: false } },
+  },
   build: {
     sourcemap: false,
     outDir: "dist",

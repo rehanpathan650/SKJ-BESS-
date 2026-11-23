@@ -57,6 +57,31 @@
       "problemMatcher": []
     },
     {
+      "label": "Website (built, port 4173)",
+      "detail": "Builds the website and serves it for the public link. Needs the API task running.",
+      "type": "shell",
+      "command": "npm.cmd --workspace apps/web run build; if ($?) { npm.cmd --workspace apps/web exec vite preview }",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "public", "panel": "dedicated" }
+    },
+    {
+      "label": "Cloudflare tunnel",
+      "detail": "Public https address for the website (shown in this terminal, ends in trycloudflare.com).",
+      "type": "shell",
+      "command": "& 'C:\\Program Files (x86)\\cloudflared\\cloudflared.exe' tunnel --no-autoupdate --url http://127.0.0.1:4173",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "public", "panel": "dedicated" }
+    },
+    {
+      "label": "Public link (Cloudflare)",
+      "detail": "API + worker + built website + tunnel. Keep this PC on while the link is in use.",
+      "dependsOn": ["API (port 8000)", "Worker (bills, emails)", "Website (built, port 4173)", "Cloudflare tunnel"],
+      "problemMatcher": []
+    },
+    {
       "label": "Backend tests",
       "type": "shell",
       "command": ".\\.venv\\Scripts\\python.exe -m pytest -q",
