@@ -1,18 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BILL_STATUS_LABELS, formatDate, formatINR, formatNumber, type Bill, type BillAnalysis } from "@skj/shared";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { EstimateCard } from "./Estimate";
-import { BarList, Card, Empty, ErrorBox, Kpi, StatusBadge } from "./ui";
+import { BarList, Card, DropZone, Empty, ErrorBox, Kpi, StatusBadge } from "./ui";
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.csv";
 
 export function BillUploader({ customerId, projectId, onUploaded }: { customerId: string; projectId?: string; onUploaded?: () => void }) {
-  const [drag, setDrag] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
 
   async function upload(files: FileList | null) {
     if (!files?.length) return;
@@ -26,21 +24,14 @@ export function BillUploader({ customerId, projectId, onUploaded }: { customerId
       onUploaded?.();
     } catch (e) { setError(e); } finally {
       setBusy(false);
-      if (input.current) input.current.value = "";
     }
   }
 
   return (
     <div className="stack">
       <ErrorBox error={error} />
-      <div className={`dropzone ${drag ? "drag" : ""}`}
-        onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
-        onDrop={(e) => { e.preventDefault(); setDrag(false); upload(e.dataTransfer.files); }}>
-        <p><strong>{busy ? "Uploading…" : "Drop electricity bills here"}</strong></p>
-        <p className="small">PDF, photo (JPG/PNG/WEBP), Excel (.xlsx) or CSV. Up to 12 files, 15 MB each.</p>
-        <button type="button" onClick={() => input.current?.click()} disabled={busy}>Choose files</button>
-        <input ref={input} type="file" multiple accept={ACCEPT} hidden onChange={(e) => upload(e.target.files)} />
-      </div>
+      <DropZone title="Drop electricity bills here" button="Choose files" accept={ACCEPT} multiple busy={busy}
+        hint="PDF, photo, Excel or CSV. Up to 12 files, 15 MB each." onFiles={upload} />
       <p className="small muted">Files are scanned for malware and read automatically. Every value must be checked by a person before use.</p>
     </div>
   );

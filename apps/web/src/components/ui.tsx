@@ -1,6 +1,6 @@
 import { ApiError, chargeSegments, toneOf, type Tone } from "@skj/shared";
 import { AnimatePresence, motion } from "framer-motion";
-import { Inbox, X } from "lucide-react";
+import { CloudUpload, FileUp, Inbox, Loader2, X } from "lucide-react";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -117,6 +117,39 @@ export function Loading({ what = "Loading", variant = "list" }: { what?: string;
 
 export function Empty({ children, icon }: { children: ReactNode; icon?: ReactNode }) {
   return <div className="empty">{icon ?? <Inbox size={28} aria-hidden="true" />}{children}</div>;
+}
+
+/** File drop area: click anywhere (or drag files onto it on a computer). Stacks neatly on phones. */
+export function DropZone({ title, hint, button, accept, multiple, busy, primary, onFiles }: {
+  title: string; hint: ReactNode; button: string; accept: string; multiple?: boolean; busy?: boolean; primary?: boolean;
+  onFiles: (files: FileList) => void;
+}) {
+  const [drag, setDrag] = useState(false);
+  const id = useId();
+  const kinds = accept.split(",").map((k) => k.replace(".", "").toUpperCase()).filter((k) => k !== "JPEG");
+  const pick = (files: FileList | null) => { if (files?.length && !busy) onFiles(files); };
+  return (
+    <div className={`dropzone ${drag ? "drag" : ""} ${busy ? "busy" : ""}`} aria-busy={busy || undefined}
+      onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
+      onDrop={(e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files); }}>
+      <span className="dz-icon" aria-hidden="true">
+        {busy ? <Loader2 size={26} className="spin" /> : <CloudUpload size={26} />}
+      </span>
+      <div className="dz-text">
+        <strong className="dz-title">{busy ? "Uploading…" : title}</strong>
+        <span className="dz-hint">{hint}</span>
+      </div>
+      <div className="dz-kinds" aria-label="Accepted files">
+        {kinds.map((k) => <span key={k}>{k === "XLSX" ? "Excel" : k}</span>)}
+      </div>
+      <input id={id} className="sr-only" type="file" accept={accept} multiple={multiple} disabled={busy}
+        onChange={(e) => { pick(e.target.files); e.target.value = ""; }} />
+      <label htmlFor={id} className={`btn ${primary ? "primary" : ""} dz-btn ${busy ? "disabled" : ""}`}>
+        <FileUp size={16} aria-hidden="true" /> {button}
+      </label>
+      <span className="dz-drag-note small">or drag {multiple ? "files" : "the file"} here</span>
+    </div>
+  );
 }
 
 export function Field({ label, help, children }: { label: string; help?: string; children: ReactNode }) {

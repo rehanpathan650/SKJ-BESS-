@@ -231,9 +231,24 @@ details.data-table summary { cursor: pointer; font-size: 13px; color: var(--mute
 
 .empty { text-align: center; color: var(--muted); padding: 32px 12px; }
 .empty svg { display: block; margin: 0 auto 8px; color: var(--border); }
-.dropzone { border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: 28px; text-align: center; color: var(--muted);
-  transition: border-color .14s, background-color .14s; }
+.dropzone { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+  border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: clamp(20px, 4vw, 36px) clamp(14px, 3vw, 28px);
+  color: var(--muted); background: var(--surface-2); transition: border-color .14s, background-color .14s; }
+.dropzone:hover { border-color: color-mix(in srgb, var(--brand) 45%, var(--border)); }
 .dropzone.drag { border-color: var(--brand); background: var(--brand-soft); }
+.dropzone.busy { opacity: .85; }
+.dz-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--brand-soft); color: var(--brand); }
+.dz-text { display: flex; flex-direction: column; gap: 4px; max-width: 46ch; }
+.dz-title { color: var(--text); font-size: 16px; }
+.dz-hint { font-size: 13.5px; line-height: 1.45; }
+.dz-kinds { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.dz-kinds span { font-size: 11.5px; font-weight: 600; letter-spacing: .03em; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--muted); }
+.dz-btn { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-height: 44px; padding-inline: 20px; }
+.dz-btn.disabled { pointer-events: none; opacity: .6; }
+.dropzone input:focus-visible + .dz-btn { outline: 3px solid var(--brand-soft); outline-offset: 2px; border-color: var(--brand); }
+.dz-drag-note { color: var(--muted); }
+@media (hover: none), (max-width: 560px) { .dz-drag-note { display: none; } .dz-btn { width: 100%; justify-content: center; } }
 .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
 @media (max-width: 1100px) { .split { grid-template-columns: 1fr; } }
 .pdf-frame { width: 100%; height: 75vh; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
@@ -253,3 +268,8 @@ details.data-table summary { cursor: pointer; font-size: 13px; color: var(--mute
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+/* New-quotation progress: full labels on wide screens, numbers plus the current step's name on phones. */
+.steps { list-style: none; padding: 0; margin: 0 0 18px; gap: 18px; flex-wrap: nowrap; }
+.steps li { white-space: nowrap; }
+@media (max-width: 560px) { .steps { gap: 10px; } .steps li:not([aria-current]) .step-name { display: none; } }

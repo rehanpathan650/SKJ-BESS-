@@ -1,9 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { BILL_FIELD_LABELS, formatINR, type Bill, type CalcInputs, type QuoteOptions } from "@skj/shared";
-import { CheckCircle2, FileUp, Loader2 } from "lucide-react";
-import { useDeferredValue, useEffect, useRef, useState } from "react";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Badge, Card, ErrorBox, Field, Kpi, PageHead } from "../components/ui";
+import { Badge, Card, DropZone, ErrorBox, Field, Kpi, PageHead } from "../components/ui";
 import { api } from "../lib/api";
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.csv";
@@ -23,12 +23,12 @@ const LABELS: Record<string, string> = {
 function Steps({ step }: { step: number }) {
   const names = ["Upload the bill", "Check the values", "Choose and generate"];
   return (
-    <ol className="row" style={{ listStyle: "none", padding: 0, margin: "0 0 18px", gap: 18 }} aria-label="Progress">
+    <ol className="row steps" aria-label="Progress">
       {names.map((n, i) => (
         <li key={n} className="row" style={{ gap: 6, color: i === step ? "var(--text)" : "var(--muted)", fontWeight: i === step ? 600 : 400 }}
           aria-current={i === step ? "step" : undefined}>
           {i < step ? <CheckCircle2 size={18} color="var(--ok)" /> : <span className="count" style={{ background: i === step ? "var(--brand)" : "var(--border)", color: "#fff" }}>{i + 1}</span>}
-          {n}
+          <span className="step-name">{n}</span>
         </li>
       ))}
     </ol>
@@ -56,8 +56,6 @@ export function NewQuotationPage() {
 }
 
 function UploadStep({ customerId, onDone }: { customerId: string | null; onDone: (projectId: string, billId: string) => void }) {
-  const input = useRef<HTMLInputElement>(null);
-  const [drag, setDrag] = useState(false);
   const start = useMutation({
     mutationFn: (files: FileList) => {
       const form = new FormData();
@@ -70,14 +68,9 @@ function UploadStep({ customerId, onDone }: { customerId: string | null; onDone:
   return (
     <Card title="1. The customer's electricity bill">
       <ErrorBox error={start.error} />
-      <div className={`dropzone ${drag ? "drag" : ""}`} onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-        onDragLeave={() => setDrag(false)} onDrop={(e) => { e.preventDefault(); setDrag(false); if (e.dataTransfer.files.length) start.mutate(e.dataTransfer.files); }}>
-        <FileUp size={32} color="var(--brand)" aria-hidden="true" />
-        <p><strong>{start.isPending ? "Uploading…" : "Drop the bill here"}</strong></p>
-        <p className="small">PDF from the DISCOM portal works best. Photos, Excel and CSV are also accepted.</p>
-        <button type="button" className="primary" disabled={start.isPending} onClick={() => input.current?.click()}>Choose bill</button>
-        <input ref={input} type="file" accept={ACCEPT} hidden onChange={(e) => e.target.files?.length && start.mutate(e.target.files)} />
-      </div>
+      <DropZone primary title="Upload the customer's bill" button="Choose bill" accept={ACCEPT} busy={start.isPending}
+        hint="The latest monthly bill as a PDF from the DISCOM portal works best. A clear photo, Excel or CSV also works."
+        onFiles={(f) => start.mutate(f)} />
       <p className="small muted" style={{ marginTop: 10 }}>
         {customerId ? "The bill is added to this customer." : "A new customer is created and named from the bill."} Files are scanned for malware and stored encrypted.
       </p>
