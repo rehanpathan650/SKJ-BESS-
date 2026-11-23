@@ -135,3 +135,15 @@ def test_password_reset_revokes_sessions(client, emails):
     assert client.get(f"{API}/auth/me", headers=h).status_code == 401
     r = client.post(f"{API}/auth/login", json={"email": u["email"], "password": "Brand-New-Secret-77", "client": "mobile"})
     assert r.status_code == 200
+
+
+def test_single_login_mode_does_not_force_mfa(client, monkeypatch):
+    from app.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "single_user_mode", True)
+    u = make_user("Super Administrator", "owner@skjenergy.com", mfa_enabled=False)
+    r = client.post(f"{API}/auth/login", json={"email": u["email"], "password": PASSWORD, "client": "mobile"})
+    assert "access_token" in r.json()  # straight in, no code asked
+    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    assert client.get(f"{API}/auth/me", headers=h).json()["mfa_required"] is False
+    assert client.get(f"{API}/users", headers=h).status_code == 200

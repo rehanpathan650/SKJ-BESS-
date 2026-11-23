@@ -3,7 +3,8 @@
 Rules:
 * Roles are lists of permission strings. "*" means every permission (Super Administrator only).
 * A user can only grant permissions they hold themselves (prevents privilege escalation).
-* Roles holding any permission in MFA_REQUIRED must have MFA enabled before they can act.
+* Roles holding any permission in MFA_REQUIRED must have MFA enabled before they can act
+  (not in single-login mode, where MFA is optional).
 """
 from __future__ import annotations
 
@@ -106,6 +107,12 @@ def expand(perms: list[str] | None) -> set[str]:
 
 
 def requires_mfa(perms: list[str] | None) -> bool:
+    """Admin-level roles must use an authenticator app, except in single-login mode (one owner account),
+    where it is optional: the owner can still turn it on from the profile page."""
+    from app.config import get_settings
+
+    if get_settings().single_user_mode:
+        return False
     return bool(set(perms or []) & MFA_REQUIRED)
 
 

@@ -161,6 +161,25 @@ def dev_users() -> None:
         print("All test logins already exist; nothing changed. See dev-logins.txt for the password.")
 
 
+def reset_mfa(email: str) -> None:
+    """Turn off two-step login for one account (lost phone, or single-login mode). Recorded in the audit log."""
+    db = SessionLocal()
+    try:
+        user = db.execute(select(User).where(User.email == email.strip().lower())).scalar_one_or_none()
+        if not user:
+            sys.exit(f"No account with email {email}")
+        if not user.mfa_enabled and not user.mfa_secret_enc:
+            print("Two-step login is already off for this account.")
+            return
+        user.mfa_enabled = False
+        user.mfa_secret_enc = None
+        db.commit()
+        audit.record("security", "mfa.reset_via_cli", actor=user, target_type="user", target_id=user.id)
+        print(f"Two-step login turned off for {user.email}. They now sign in with email and password.")
+    finally:
+        db.close()
+
+
 def demo_data() -> None:
     if get_settings().is_production:
         sys.exit("Refusing to add demo data in production.")
@@ -207,6 +226,8 @@ def main() -> None:
     sub.add_parser("verify-audit")
     sub.add_parser("demo-data")
     sub.add_parser("dev-users")
+    rm = sub.add_parser("reset-mfa", help="Turn off two-step login for one account")
+    rm.add_argument("--email", required=True)
     args = ap.parse_args()
     if args.cmd == "init-db":
         init_db()
@@ -222,6 +243,8 @@ def main() -> None:
         demo_data()
     elif args.cmd == "dev-users":
         dev_users()
+    elif args.cmd == "reset-mfa":
+        reset_mfa(args.email)
 
 
 if __name__ == "__main__":

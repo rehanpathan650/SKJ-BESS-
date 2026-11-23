@@ -15,6 +15,8 @@ os.environ.update({
     "LOGIN_RATE_LIMIT_PER_MINUTE": "1000",
     "PUSH_ENABLED": "false",
     "SINGLE_USER_MODE": "false",  # tests must not depend on the developer's local .env; single-login tests opt in
+    "METRICS_TOKEN": "",  # a token in the local .env (public link) would hide /metrics from the tests
+    "API_DOCS": "true",
 })
 
 import pyotp  # noqa: E402
