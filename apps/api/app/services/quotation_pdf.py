@@ -74,7 +74,7 @@ def layout_drawing(content: dict, width: float, font: str, bold: str) -> Drawing
     box(xs[2], top, bw, bh, "Transformer", "step-down")
     box(xs[3], top, bw, bh, "Main LT panel", "protection", fill=SOFT, stroke=BRAND)
     box(xs[4], top, bw, bh, "Plant loads", "existing")
-    for a, b in zip(xs, xs[1:]):
+    for a, b in zip(xs, xs[1:], strict=False):  # consecutive pairs
         wire(a + bw, top + bh / 2, b, top + bh / 2)
     lt_cx = xs[3] + bw / 2
     if has_solar:
@@ -92,7 +92,7 @@ def layout_drawing(content: dict, width: float, font: str, bold: str) -> Drawing
     items = [("Battery racks", f"{sys_['capacity_kwh']:,.0f} kWh"), ("PCS", f"{sys_['power_kw']:,.0f} kW"),
              ("BMS / EMS", "control"), ("HVAC + fire", "suppression")]
     ix = [cx + 3 * mm + i * (iw + 3.5 * mm) for i in range(4)]
-    for (t, sub), x in zip(items, ix):
+    for (t, sub), x in zip(items, ix, strict=True):
         box(x, iy, iw, ih, t, sub, fill=colors.white, stroke=BRAND, tcolor=INK)
     wire(ix[0] + iw, iy + ih / 2, ix[1], iy + ih / 2, color=BRAND)            # DC link battery -> PCS
     d.add(String((ix[0] + iw + ix[1]) / 2, iy + ih / 2 + 2, "DC", fontName=font, fontSize=6, fillColor=BRAND, textAnchor="middle"))

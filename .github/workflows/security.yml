@@ -1,4 +1,5 @@
 # Runs on every push/PR and weekly. A High/Critical finding fails the build.
+# Findings from the secret and code scans are also written as annotations, so they show on the commit and in PRs.
 name: security
 
 on:
@@ -16,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: apps/api } }
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12" }
       - run: pip install -r requirements-dev.txt
       - name: Unit, access-control and API attack tests
@@ -25,15 +26,15 @@ jobs:
       - name: SAST (Bandit)
         run: bandit -r app -lll -iii
       - name: SAST (Ruff security rules)
-        run: ruff check app --select S,B,E9,F --ignore S101,B008,B904
+        run: ruff check app --select S,B,E9,F --ignore S101,B008,B904 --output-format github
       - name: SCA (pip-audit)
         run: pip-audit -r requirements.txt --strict
 
   web:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: "22" }
       - run: npm ci
       - run: npm --workspace apps/web run build
@@ -44,8 +45,8 @@ jobs:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: apps/mobile } }
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: "22" }
       - run: npm ci --legacy-peer-deps
       - run: npx tsc --noEmit
@@ -57,31 +58,53 @@ jobs:
     runs-on: ubuntu-latest
     container: { image: semgrep/semgrep }
     steps:
-      - uses: actions/checkout@v4
-      - run: semgrep scan --config p/owasp-top-ten --config p/python --config p/typescript --config p/secrets --error --severity ERROR
+      - uses: actions/checkout@v5
+      - name: SAST (Semgrep, OWASP Top 10 / Python / TypeScript / secrets)
+        run: |
+          semgrep scan --config p/owasp-top-ten --config p/python --config p/typescript --config p/secrets \
+            --severity ERROR --json --output semgrep.json --quiet || true
+          python3 - <<'PY'
+          import json, sys
+          results = json.load(open("semgrep.json")).get("results", [])
+          for r in results:
+              msg = r["extra"]["message"].replace("\n", " ")[:400]
+              print(f"::error file={r['path']},line={r['start']['line']},title=semgrep {r['check_id'].split('.')[-1]}::{msg}")
+          print(f"{len(results)} Semgrep finding(s) at ERROR severity")
+          sys.exit(1 if results else 0)
+          PY
 
   secrets:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@v2
-        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+      - name: Secret scan (gitleaks, full history, values redacted)
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            git /repo --redact --report-format json --report-path /repo/gitleaks.json --exit-code 0
+          python3 - <<'PY'
+          import json, sys
+          leaks = json.load(open("gitleaks.json"))
+          for x in leaks:
+              print(f"::error file={x['File']},line={x['StartLine']},title=gitleaks {x['RuleID']}::{x['Description']} (commit {x['Commit'][:7]})")
+          print(f"{len(leaks)} possible secret(s)")
+          sys.exit(1 if leaks else 0)
+          PY
 
   containers:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: docker build -t skj-api:ci apps/api
       - name: Container image scan (Trivy)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0, pinned to a commit
         with:
           image-ref: skj-api:ci
           severity: CRITICAL,HIGH
           exit-code: "1"
           ignore-unfixed: true
       - name: IaC / compose misconfiguration scan (Trivy)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: config
           scan-ref: .

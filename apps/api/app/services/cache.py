@@ -6,6 +6,7 @@ Values must be JSON-serialisable. Never cache anything that crosses users: keys 
 from __future__ import annotations
 
 import json
+import logging
 import threading
 import time
 from typing import Any, Callable
@@ -74,8 +75,8 @@ def bump() -> None:
         try:
             r.incr("skj:cache:version")
             return
-        except Exception:
-            pass
+        except Exception:  # Redis unavailable: fall back to the in-process version below
+            logging.getLogger("skj.cache").warning("cache version bump failed; using in-process version")
     with _lock:
         _version += 1
 
