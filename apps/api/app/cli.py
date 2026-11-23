@@ -28,16 +28,19 @@ def init_db() -> None:
     """Create tables and any missing indexes (safe to re-run on an existing dev database)."""
     Base.metadata.create_all(engine)
     # Development databases: add new nullable columns to existing tables (production uses Alembic migrations).
-    from sqlalchemy import inspect, text
+    # Uses Alembic's schema operations, so no SQL text is assembled by hand.
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+    from sqlalchemy import Column, inspect
 
     insp = inspect(engine)
     with engine.begin() as conn:
+        ops = Operations(MigrationContext.configure(conn))
         for table in Base.metadata.sorted_tables:
             existing = {c["name"] for c in insp.get_columns(table.name)}
             for col in table.columns:
                 if col.name not in existing and col.nullable:
-                    conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN "{col.name}" '  # nosec B608 - names from our own model
-                                      f'{col.type.compile(dialect=engine.dialect)}'))
+                    ops.add_column(table.name, Column(col.name, col.type, nullable=True))
                     print(f"Added column {table.name}.{col.name}")
     for table in Base.metadata.sorted_tables:
         for index in table.indexes:

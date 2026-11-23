@@ -1,0 +1,15 @@
+# Secret-scan settings (gitleaks). All default rules stay on for the whole repository and its history.
+# The automated tests sign up and log in made-up users against throwaway databases, so their files contain
+# fake passwords that look like keys to the scanner. Those folders are excluded; nothing else is.
+# Real secrets never belong in the repository: they go in .env (git-ignored) or the server's secret store.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Fake credentials used only by automated tests (throwaway databases)"
+paths = [
+  '''^apps/api/tests/''',
+  '''^apps/api/loadtest/''',
+  '''^apps/web/e2e/''',
+]
