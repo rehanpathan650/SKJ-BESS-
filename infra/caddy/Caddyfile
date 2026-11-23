@@ -1,0 +1,10 @@
+# Production entry point: automatic HTTPS (Let's Encrypt) for APP_DOMAIN.
+{
+	servers {
+		protocols h1 h2
+	}
+}
+
+{$APP_DOMAIN} {
+	import /etc/caddy/site.caddy
+}

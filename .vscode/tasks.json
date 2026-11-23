@@ -1,0 +1,67 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "API (port 8000)",
+      "type": "shell",
+      "command": ".\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --port 8000",
+      "options": { "cwd": "${workspaceFolder}/apps/api" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "skj", "panel": "dedicated" }
+    },
+    {
+      "label": "Worker (bills, emails)",
+      "type": "shell",
+      "command": ".\\.venv\\Scripts\\python.exe -m app.worker",
+      "options": { "cwd": "${workspaceFolder}/apps/api" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "skj", "panel": "dedicated" }
+    },
+    {
+      "label": "Web app (port 5173)",
+      "type": "shell",
+      "command": "npm.cmd run web:dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "skj", "panel": "dedicated" }
+    },
+    {
+      "label": "API for phone (Wi-Fi, port 8000)",
+      "detail": "Same as the API task but reachable from your phone on the same Wi-Fi. Stop the normal API task first.",
+      "type": "shell",
+      "command": ".\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+      "options": { "cwd": "${workspaceFolder}/apps/api" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "skj", "panel": "dedicated" }
+    },
+    {
+      "label": "Mobile app (Expo Go)",
+      "detail": "Shows a QR code; scan it with the Expo Go app on your Android phone.",
+      "type": "shell",
+      "command": "npx.cmd expo start --lan --clear",
+      "options": {
+        "cwd": "${workspaceFolder}/apps/mobile",
+        "env": { "APP_VARIANT": "development" }
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated" }
+    },
+    {
+      "label": "Run SKJ (all)",
+      "dependsOn": ["API (port 8000)", "Worker (bills, emails)", "Web app (port 5173)"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend tests",
+      "type": "shell",
+      "command": ".\\.venv\\Scripts\\python.exe -m pytest -q",
+      "options": { "cwd": "${workspaceFolder}/apps/api" },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+line-length = 120
+target-version = "py312"
+
+[lint.per-file-ignores]
+# Reviewed 2026-11-22 (see docs/security-assessment-report.md):
+# S110: resource limits / PDF active-content probe are best-effort by design.
+"app/parsing/sandbox_parser.py" = ["S110"]
+# S106/S107: "bearer", "mfa", "access" are token-type labels, not passwords.
+"app/routers/auth.py" = ["S106"]
+"app/security/tokens.py" = ["S107"]
+# S603: fixed argv (sys.executable, our own sandbox script, server-generated temp path); no shell.
+"app/services/extraction.py" = ["S603"]
+"tests/*" = ["S101", "S105", "S106"]

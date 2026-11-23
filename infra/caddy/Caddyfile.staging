@@ -1,0 +1,12 @@
+# Staging on a developer PC: certificates from Caddy's internal CA.
+# "localhost" is for your browser (https://localhost:8443); "proxy" lets scanners on the Docker network reach it.
+{
+	servers {
+		protocols h1 h2
+	}
+}
+
+localhost, proxy {
+	tls internal
+	import /etc/caddy/site.caddy
+}

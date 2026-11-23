@@ -1,0 +1,9 @@
+{
+  "name": "@skj/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Types, API client, permission names and formatting shared by the web and Android apps",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": false
+}

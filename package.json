@@ -1,0 +1,16 @@
+{
+  "name": "skj-bess-platform",
+  "private": true,
+  "version": "1.0.0",
+  "description": "SKJ Energy Solutions internal BESS platform (web, Android, API)",
+  "overrides": { "react": "19.3.0", "react-dom": "19.3.0" },
+  "workspaces": [
+    "apps/web",
+    "packages/shared"
+  ],
+  "scripts": {
+    "web:dev": "npm --workspace apps/web run dev",
+    "web:build": "npm --workspace apps/web run build",
+    "web:typecheck": "npm --workspace apps/web run typecheck"
+  }
+}
