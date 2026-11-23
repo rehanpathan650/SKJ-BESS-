@@ -230,3 +230,16 @@ test.describe.serial("User administration: reject, unlock, reset MFA", () => {
     await expect(page.getByLabel("Main navigation")).toHaveCount(0);
   });
 });
+
+test.describe("New quotation upload", () => {
+  test("choosing a bill in the picker uploads it and moves on to checking the values", async ({ page }) => {
+    await login(page, "sales");
+    await page.goto("/quotations/new");
+    await page.locator('input[type="file"]').setInputFiles({ name: "quote-bill.csv", mimeType: "text/csv",
+      buffer: Buffer.from("Units consumed (kWh),Recorded max demand (kVA)\n98000,610\n") });
+    // Regression: the picker used to be cleared before the upload read it, sending no file ("files: Field required").
+    await expect(page).toHaveURL(/step=1/);
+    await expect(page.getByText("Field required")).toHaveCount(0);
+    await expect(page.locator('[aria-current="step"]')).toContainText("Check the values");
+  });
+});

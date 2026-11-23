@@ -12,7 +12,7 @@ export function BillUploader({ customerId, projectId, onUploaded }: { customerId
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
 
-  async function upload(files: FileList | null) {
+  async function upload(files: File[]) {
     if (!files?.length) return;
     const form = new FormData();
     Array.from(files).slice(0, 12).forEach((f) => form.append("files", f));

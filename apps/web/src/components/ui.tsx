@@ -1,7 +1,7 @@
 import { ApiError, chargeSegments, toneOf, type Tone } from "@skj/shared";
 import { AnimatePresence, motion } from "framer-motion";
 import { CloudUpload, FileUp, Inbox, Loader2, X } from "lucide-react";
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 export function errorMessage(e: unknown): string {
@@ -119,19 +119,22 @@ export function Empty({ children, icon }: { children: ReactNode; icon?: ReactNod
   return <div className="empty">{icon ?? <Inbox size={28} aria-hidden="true" />}{children}</div>;
 }
 
-/** File drop area: click anywhere (or drag files onto it on a computer). Stacks neatly on phones. */
+/** File drop area: click anywhere in it (or drag files onto it on a computer). Stacks neatly on phones. */
 export function DropZone({ title, hint, button, accept, multiple, busy, primary, onFiles }: {
   title: string; hint: ReactNode; button: string; accept: string; multiple?: boolean; busy?: boolean; primary?: boolean;
-  onFiles: (files: FileList) => void;
+  onFiles: (files: File[]) => void;
 }) {
   const [drag, setDrag] = useState(false);
   const id = useId();
+  const input = useRef<HTMLInputElement>(null);
   const kinds = accept.split(",").map((k) => k.replace(".", "").toUpperCase()).filter((k) => k !== "JPEG");
-  const pick = (files: FileList | null) => { if (files?.length && !busy) onFiles(files); };
+  // Copy the files out first: a FileList is live and empties when the input is cleared for the next pick.
+  const pick = (files: FileList | null) => { const list = Array.from(files ?? []); if (list.length && !busy) onFiles(list); };
   return (
     <div className={`dropzone ${drag ? "drag" : ""} ${busy ? "busy" : ""}`} aria-busy={busy || undefined}
       onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
-      onDrop={(e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files); }}>
+      onDrop={(e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files); }}
+      onClick={(e) => { if (!busy && !(e.target as HTMLElement).closest("label, input")) input.current?.click(); }}>
       <span className="dz-icon" aria-hidden="true">
         {busy ? <Loader2 size={26} className="spin" /> : <CloudUpload size={26} />}
       </span>
@@ -142,7 +145,7 @@ export function DropZone({ title, hint, button, accept, multiple, busy, primary,
       <div className="dz-kinds" aria-label="Accepted files">
         {kinds.map((k) => <span key={k}>{k === "XLSX" ? "Excel" : k}</span>)}
       </div>
-      <input id={id} className="sr-only" type="file" accept={accept} multiple={multiple} disabled={busy}
+      <input ref={input} id={id} className="sr-only" type="file" accept={accept} multiple={multiple} disabled={busy}
         onChange={(e) => { pick(e.target.files); e.target.value = ""; }} />
       <label htmlFor={id} className={`btn ${primary ? "primary" : ""} dz-btn ${busy ? "disabled" : ""}`}>
         <FileUp size={16} aria-hidden="true" /> {button}

@@ -57,7 +57,7 @@ export function NewQuotationPage() {
 
 function UploadStep({ customerId, onDone }: { customerId: string | null; onDone: (projectId: string, billId: string) => void }) {
   const start = useMutation({
-    mutationFn: (files: FileList) => {
+    mutationFn: (files: File[]) => {
       const form = new FormData();
       Array.from(files).slice(0, 12).forEach((f) => form.append("files", f));
       if (customerId) form.append("customer_id", customerId);
